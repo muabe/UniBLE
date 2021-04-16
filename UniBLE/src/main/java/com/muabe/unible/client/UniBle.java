@@ -221,6 +221,14 @@ public class UniBle implements BleListener{
         return false;
     }
 
+    public void BluetoothOn(){
+        BluetoothAdapter.getDefaultAdapter().enable();
+    }
+
+    public void BluetoothOff(){
+        BluetoothAdapter.getDefaultAdapter().disable();
+    }
+
     public void enableAutoBluetoothResult(int requestCode, int resultCode, OnBluetoothAutoEnableListener listener){
         if(requestCode == REQUEST_SCAN_RESULT) {
             if (resultCode == Activity.RESULT_OK) {
