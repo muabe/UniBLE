@@ -221,11 +221,11 @@ public class UniBle implements BleListener{
         return false;
     }
 
-    public void BluetoothOn(){
+    public void bluetoothOn(){
         BluetoothAdapter.getDefaultAdapter().enable();
     }
 
-    public void BluetoothOff(){
+    public void bluetoothOff(){
         BluetoothAdapter.getDefaultAdapter().disable();
     }
 
@@ -296,6 +296,14 @@ public class UniBle implements BleListener{
         this.currGatt = gatt;
     }
 
+    public BluetoothDevice getConnectedevice(){
+        return currDevice;
+    }
+
+    public BluetoothGatt getConnectedGatt(){
+        return currGatt;
+    }
+
     public void connect(String address){
         if(checkBluetooth() >= 0) {
             BluetoothDevice device = getAdapter().getRemoteDevice(address);
@@ -329,6 +337,46 @@ public class UniBle implements BleListener{
             } else {
                 post = PostJob.PAIR_TO_CONNECT;
                 paring(device);
+            }
+        }else if(check == 1){
+            listener.onException(new BleException(Message.BT_NOT_ENABLE, "connect"));
+        }
+    }
+
+    public void connectNotPairing(String address){
+        if(checkBluetooth() >= 0) {
+            BluetoothDevice device = getAdapter().getRemoteDevice(address);
+            this.connectNotPairing(device);
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    public void connectNotPairing(BluetoothDevice device){
+        int check = checkBluetooth();
+        if(check == 0) {
+            if (BluetoothDevice.BOND_BONDED == device.getBondState()) {
+                BluetoothManager bluetoothManager = (BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE);
+                if(currGatt ==null || bluetoothManager.getConnectionState(currGatt.getDevice(), BluetoothProfile.GATT) == BluetoothProfile.STATE_DISCONNECTED) {
+                    if(state.connecting){
+                        onException(new BleException(Message.ALEADY_CONNECTING));
+                    }else{
+                        state.connecting = true;
+                        gattReceiver.setConnectAdapter(new ConnectStateAdapter(device, connectStateListener));
+                        device.connectGatt(context, false, gattReceiver);
+                    }
+                }else if(currGatt != null && bluetoothManager.getConnectionState(currGatt.getDevice(), BluetoothProfile.GATT) == BluetoothProfile.STATE_CONNECTED){
+                    onException(new BleException(Message.ALEADY_CONNECTED));
+                }else if(currGatt != null && bluetoothManager.getConnectionState(currGatt.getDevice(), BluetoothProfile.GATT) == BluetoothProfile.STATE_CONNECTING){
+                    onException(new BleException(Message.ALEADY_CONNECTING));
+                }else {
+                    onException(new BleException(Message.ALEADY_CONNECTING));
+                }
+            } else if (BluetoothDevice.BOND_BONDING == device.getBondState()) {
+                onException(new BleException(Message.BT_BONDING));
+            } else {
+                state.connecting = true;
+                gattReceiver.setConnectAdapter(new ConnectStateAdapter(device, connectStateListener));
+                device.connectGatt(context, false, gattReceiver);
             }
         }else if(check == 1){
             listener.onException(new BleException(Message.BT_NOT_ENABLE, "connect"));
@@ -377,6 +425,10 @@ public class UniBle implements BleListener{
         try {
             for(Field field : service.getClass().getDeclaredFields()){
                 field.setAccessible(true);
+                if(field.getName().equals("uniBle")){
+                    field.set(service, this);
+                }
+
                 Characteristic characteristic = field.getAnnotation(Characteristic.class);
                 if(characteristic != null) {
                     name = characteristic.name();
@@ -413,8 +465,8 @@ public class UniBle implements BleListener{
         return gattReceiver.services.get(gattServiceClass.getSimpleName());
     }
 
-    public GattService getGattService(Class<? extends GattService> gattServiceClass){
-        return getHub(gattServiceClass).getGattGervice();
+    public <T extends GattService> T getGattService(Class<T> gattServiceClass){
+        return (T)getHub(gattServiceClass).getGattGervice();
     }
 
 

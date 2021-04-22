@@ -108,19 +108,42 @@ public class GattReceiver extends BluetoothGattCallback {
 
     @Override
     public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-        Log.d("GattReceiver", "onCharacteristicWrite");
+        Log.d("GattReceiver", "onCharacteristicWrite GATT_SUCCESS :"+status);
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            for (String key : services.keySet()) {
+                GattServiceHub hub = services.get(key);
+                if (characteristic.getService().getUuid().equals(hub.getServiceUUID())) {
+                    hub.getListener().onCharacteristicWrite(gatt, hub, characteristic);
+                }
+            }
+        }else{
+            listener.onException(new BleException(Message.CHARACTERISTIC_READ_FAILURE));
+        }
     }
 
     @Override
     public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
         Log.d("GattReceiver", "onDescriptorRead");
+
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            for(String key : services.keySet()){
+                BluetoothGattCharacteristic characteristic = descriptor.getCharacteristic();
+                GattServiceHub hub = services.get(key);
+                if(characteristic.getService().getUuid().equals(hub.getServiceUUID())){
+                    hub.getListener().onDescriptorRead(gatt, hub, descriptor);
+                    break;
+                }
+            }
+        }else{
+            listener.onException(new BleException(Message.CHARACTERISTIC_READ_FAILURE));
+        }
     }
 
     @Override
     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
         Log.d("GattReceiver", "onDescriptorWrite : "+status);
         Log.d("GattReceiver", descriptor.getCharacteristic().getUuid().toString()+" : "+descriptor.getUuid().toString());
-//        if (status == BluetoothGatt.GATT_SUCCESS) {
+        if (status == BluetoothGatt.GATT_SUCCESS) {
             for (String key : services.keySet()) {
                 BluetoothGattCharacteristic characteristic = descriptor.getCharacteristic();
                 GattServiceHub hub = services.get(key);
@@ -128,7 +151,9 @@ public class GattReceiver extends BluetoothGattCallback {
                     hub.getListener().onDescriptorWrite(gatt, hub, descriptor);
                 }
             }
-
+        }else{
+            listener.onException(new BleException(Message.DESCIPTOR_WRITE_FAILURE));
+        }
     }
 
     @Override

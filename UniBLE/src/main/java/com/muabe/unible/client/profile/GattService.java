@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import java.util.Hashtable;
 
 public class GattService implements GattServiceHub.ServicesDiscoveredListener {
+
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, GattServiceHub service, Hashtable<String, GattServiceHub> services) {
 
@@ -23,7 +24,17 @@ public class GattService implements GattServiceHub.ServicesDiscoveredListener {
     }
 
     @Override
+    public void onDescriptorRead(BluetoothGatt gatt, GattServiceHub hub, BluetoothGattDescriptor descriptor) {
+
+    }
+
+    @Override
     public void onCharacteristicChanged(BluetoothGatt gatt, GattServiceHub hub, BluetoothGattCharacteristic characteristic) {
+
+    }
+
+    @Override
+    public void onCharacteristicWrite(BluetoothGatt gatt, GattServiceHub hub, BluetoothGattCharacteristic characteristic) {
 
     }
 

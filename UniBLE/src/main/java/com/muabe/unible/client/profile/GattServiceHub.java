@@ -18,7 +18,9 @@ public class GattServiceHub {
         void onServicesDiscovered(BluetoothGatt gatt, GattServiceHub hub, Hashtable<String, GattServiceHub> services);
         void onCharacteristicRead(BluetoothGatt gatt, GattServiceHub hub, BluetoothGattCharacteristic characteristic);
         void onDescriptorWrite(BluetoothGatt gatt, GattServiceHub hub, BluetoothGattDescriptor descriptor);
+        void onDescriptorRead(BluetoothGatt gatt, GattServiceHub hub, BluetoothGattDescriptor descriptor);
         void onCharacteristicChanged(BluetoothGatt gatt, GattServiceHub hub, BluetoothGattCharacteristic characteristic);
+        void onCharacteristicWrite(BluetoothGatt gatt, GattServiceHub hub, BluetoothGattCharacteristic characteristic);
     }
 
     private GattService gattGervice;
@@ -118,10 +120,21 @@ public class GattServiceHub {
     }
 
 
-    public void listening(String charName, String descName, BluetoothGatt gatt) {
+    public void notification(String charName, String descName, BluetoothGatt gatt) {
         CharacterDto info = characters.get(charName);
         if(info.getCharacteristic() == null){
-            throw new RuntimeException("등록하지 않은 Characteristic 이름 입니다.[" + name + "]");
+            throw new RuntimeException("등록하지 않은 Characteristic 이름 입니다.[" + charName + "]");
+        }
+        gatt.setCharacteristicNotification(info.getCharacteristic(), true);
+        BluetoothGattDescriptor descriptor = info.getCharacteristic().getDescriptor(UUID.fromString(descriptors.get(descName)));
+        descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+        gatt.writeDescriptor(descriptor);
+    }
+
+    public void indication(String charName, String descName, BluetoothGatt gatt) {
+        CharacterDto info = characters.get(charName);
+        if(info.getCharacteristic() == null){
+            throw new RuntimeException("등록하지 않은 Characteristic 이름 입니다.[" + charName + "]");
         }
         gatt.setCharacteristicNotification(info.getCharacteristic(), true);
         BluetoothGattDescriptor descriptor = info.getCharacteristic().getDescriptor(UUID.fromString(descriptors.get(descName)));
@@ -129,8 +142,8 @@ public class GattServiceHub {
         gatt.writeDescriptor(descriptor);
     }
 
-    public void writing(String name, BluetoothGatt gatt){
-        gatt.writeCharacteristic(getCharacteristic(name));
+    public void writing(String charName, BluetoothGatt gatt){
+        gatt.writeCharacteristic(getCharacteristic(charName));
     }
 
     public void chear() {
