@@ -161,6 +161,10 @@ public class UniBle implements BleListener{
         this.gattReceiver = new GattReceiver(this);
     }
 
+    public void setListener(BleListener listener){
+        this.listener = listener;
+    }
+
     Context getContext(){
         return this.context;
     }
@@ -221,11 +225,11 @@ public class UniBle implements BleListener{
         return false;
     }
 
-    public void bluetoothOn(){
+    public static void bluetoothOn(){
         BluetoothAdapter.getDefaultAdapter().enable();
     }
 
-    public void bluetoothOff(){
+    public static void bluetoothOff(){
         BluetoothAdapter.getDefaultAdapter().disable();
     }
 
